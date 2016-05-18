@@ -1,0 +1,34 @@
+.menu {
+    width: 200px;
+    float: left;
+    text-align: center;
+    background: green;
+    margin-left: 30px;
+    border-radius: 25px;
+    color: white;
+    cursor: pointer;
+    margin-top: 10px;
+}
+.container{
+    width: 1000px;
+    margin: auto;
+}
+.button_control {
+    float: left;
+    width: 100px;
+    margin-left: 30px;
+    text-align: center;
+    background: blue;
+    border-radius: 50%;
+    color: WHITE;
+    padding: 20px 0;
+    cursor: pointer;    
+}
+.pre-control{
+    width: 300px;
+    margin: AUTO;
+}
+svg{
+    border: 1px solid #ccc;
+    margin: 20px 0 20px 0;
+}
