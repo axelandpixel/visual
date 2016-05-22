@@ -19042,7 +19042,7 @@ module.exports = require('./lib/React');
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-function babel() {
+module.exports = function () {
 	var startData = [3, 2, 4, 1, 5];
 	var tmp = [3, 2, 4, 1, 5];
 	var startDot = [0, 1, 2, 3, 4];
@@ -19062,8 +19062,6 @@ function babel() {
 			}
 		}
 	}
-	console.log(data);
-	console.log(startDot);
 	var App = React.createClass({
 		displayName: 'App',
 
@@ -19082,9 +19080,8 @@ function babel() {
 					if (startDot[i] == data[pos] + 1) k = i;
 				}
 				swap(startDot, v, k);
-				this.setState({ f: false, info: "Меняем местами элементы с индексами " + data[pos] + " и " + (data[pos] + 1) });
+				this.setState({ f: false, info: "Так как, " + tmp[v] + " больше чем " + tmp[k] + ". Меняем местами элементы с индексами " + data[pos] + " и " + (data[pos] + 1) });
 				pos++;
-				console.log(startDot);
 			}
 		},
 		prev: function prev() {
@@ -19110,6 +19107,11 @@ function babel() {
 				React.createElement(
 					'svg',
 					{ width: '1000', height: '300' },
+					React.createElement(
+						'text',
+						{ x: 270, y: 100 },
+						this.state.info
+					),
 					dots
 				),
 				React.createElement(
@@ -19173,8 +19175,434 @@ function babel() {
 		}
 	});
 	ReactDOM.render(React.createElement(App, null), document.getElementById('root'));
-}
-function searchLong() {
+};
+
+},{"react":158,"react-dom":29}],160:[function(require,module,exports){
+'use strict';
+
+var React = require('react');
+var ReactDOM = require('react-dom');
+
+module.exports = function () {
+    var arr = [1, 4, 5, 3, 5, 6, 7, 8, 4];
+    var nextPerm = [],
+        prevPerm = [];
+    var index = [];
+    for (var i = 0; i < arr.length; ++i) {
+        index[i] = i;
+    }
+    var arr1 = arr.slice();
+    var current = 0;
+    var leng = arr.length;
+    var it = 0;
+    var corX = [],
+        corY = [];
+    corX[0] = 500;
+    corY[0] = 50;
+    var rangeX = 70;
+    var rangeY = 70;
+    function makeHeap(array, leng, it) {
+        var left = 2 * it + 1;
+        var right = 2 * it + 2;
+        if (it == 0) rangeX = 100;else {
+            rangeX = 70;
+        }
+
+        if (right < leng) {
+            corX[right] = corX[it] + rangeX;
+            corY[right] = corY[it] + rangeY;
+        }
+        if (left < leng) {
+            corX[left] = corX[it] - rangeX;
+            corY[left] = corY[it] + rangeY;
+        }
+        if (it < leng) makeHeap(array, leng, it + 1);
+    }
+
+    makeHeap(arr, leng, it);
+    var corXstat = corX.slice();
+    var corYstat = corY.slice();
+    var cor = 0;
+    function Heapify(array, leng, it) {
+        var left = 2 * it + 1;
+        var right = 2 * it + 2;
+        var large = it;
+        if (left < leng && array[left] > array[large]) large = left;
+        if (right < leng && array[right] > array[large]) large = right;
+        if (large != it) {
+            var tmp = array[it];
+            array[it] = array[large];
+            array[large] = tmp;
+            prevPerm.push(it);
+            nextPerm.push(large);
+            Heapify(array, leng, large);
+        }
+    }
+    for (var i = 8; i >= 0; --i) {
+        Heapify(arr1, leng, i);
+    }
+    var Dot = React.createClass({
+        displayName: 'Dot',
+
+        getInitialState: function getInitialState() {
+            return {
+                startx: 0,
+                starty: 0,
+                x: 0,
+                y: 0,
+                finalx: 0,
+                finaly: 0,
+                startTime: 0
+            };
+        },
+        render: function render() {
+            var state = this.state;
+            var props = this.props;
+            var amount = 0;
+            if (state.finalx !== props.x) {
+                state.finalx = props.x;
+                state.finaly = props.y;
+                state.startx = state.x;
+                state.starty = state.y;
+                state.startTime = Date.now();
+            } else {
+                amount = (Date.now() - state.startTime) / this.props.duration;
+            }
+            if (amount <= 1) {
+                var x = state.startx + amount * (props.x - state.startx);
+                var y = state.starty + amount * (props.y - state.starty);
+                setTimeout(function () {
+                    this.setState({ x: x, y: y });
+                }.bind(this), 1);
+            } else {
+                state.finalx = state.x = x = props.x;
+                state.finaly = state.y = y = props.y;
+            }
+            return React.createElement(
+                'g',
+                null,
+                React.createElement('circle', { fill: this.props.fiil, stroke: this.props.stroke, cy: this.state.y, cx: this.state.x, r: '15' }),
+                React.createElement(
+                    'text',
+                    { x: this.state.x - 3, y: this.state.y + 5 },
+                    this.props.text
+                ),
+                React.createElement(
+                    'text',
+                    { x: this.state.x - 3, y: this.state.y + 35 },
+                    this.props.label
+                )
+            );
+        }
+    });
+    var Dots = React.createClass({
+        displayName: 'Dots',
+
+        render: function render() {
+            var massX = this.props.dataX;
+            var massY = this.props.dataY;
+            var massA = this.props.dataA;
+            var dots = massA.map(function (item, key) {
+                return React.createElement(Dot, { key: key, x: massX[key], y: massY[key], fiil: "none", stroke: "black", text: massA[key], label: key + 1, duration: 500 });
+            });
+            return React.createElement(
+                'g',
+                null,
+                dots
+            );
+        }
+    });
+    var Lines = React.createClass({
+        displayName: 'Lines',
+
+        render: function render() {
+            var lines = corX.map(function (item, key) {
+                if (key < corX.length / 2 - 1) {
+                    return React.createElement(
+                        'g',
+                        null,
+                        React.createElement('line', { stroke: 'black', strokeWidth: 2, x1: corXstat[key], x2: corXstat[key * 2 + 1], y1: corYstat[key], y2: corYstat[key * 2 + 1] }),
+                        React.createElement('line', { stroke: 'black', strokeWidth: 2, x1: corXstat[key], x2: corXstat[key * 2 + 2], y1: corYstat[key], y2: corYstat[key * 2 + 2] })
+                    );
+                }
+            });
+            var line = lines.map(function (item, key) {
+                return item;
+            });
+            return React.createElement(
+                'g',
+                null,
+                line
+            );
+        }
+    });
+    var Heap = React.createClass({
+        displayName: 'Heap',
+
+        getInitialState: function getInitialState() {
+            return {
+                f: false
+            };
+        },
+        swap: function swap() {
+            var tmp = corX[index[nextPerm[current]]];
+            corX[index[nextPerm[current]]] = corX[index[prevPerm[current]]];
+            corX[index[prevPerm[current]]] = tmp;
+            tmp = corY[index[nextPerm[current]]];
+            corY[index[nextPerm[current]]] = corY[index[prevPerm[current]]];
+            corY[index[prevPerm[current]]] = tmp;
+            tmp = index[nextPerm[current]];
+            index[nextPerm[current]] = index[prevPerm[current]];
+            index[prevPerm[current]] = tmp;
+            this.setState({ f: !this.state.f });
+        },
+        next: function next() {
+            if (current < nextPerm.length) {
+                this.swap();
+                ++current;
+            }
+        },
+        prev: function prev() {
+            if (current > 0) {
+                --current;
+                this.swap();
+            }
+        },
+        render: function render() {
+            return React.createElement(
+                'div',
+                { className: 'ShowerItem' },
+                React.createElement(
+                    'svg',
+                    { width: '1000px', height: '300px' },
+                    React.createElement(Dots, { dataX: corX, dataY: corY, dataA: arr, current: current }),
+                    React.createElement(Lines, null)
+                ),
+                React.createElement(
+                    'div',
+                    { className: 'pre-control' },
+                    React.createElement(
+                        'div',
+                        { className: 'button_control', onClick: this.next },
+                        'Вперед'
+                    ),
+                    React.createElement(
+                        'div',
+                        { className: 'button_control', onClick: this.prev },
+                        'Назад'
+                    )
+                )
+            );
+        }
+    });
+    ReactDOM.render(React.createElement(Heap, null), document.getElementById('root'));
+};
+
+},{"react":158,"react-dom":29}],161:[function(require,module,exports){
+'use strict';
+
+var React = require('react');
+var ReactDOM = require('react-dom');
+module.exports = function () {
+	var massA = [1, 4, 5, 6, 5, 4, 2];
+	var massC = [0, 0, 0, 0, 0, 0, 0];
+	var massB = [0, 0, 0, 0, 0, 0, 0];
+	var Dot = React.createClass({
+		displayName: 'Dot',
+
+		getInitialState: function getInitialState() {
+			return {
+				startx: 10,
+				starty: 20,
+				x: 325,
+				y: 45,
+				finalx: 0,
+				finaly: 0,
+				startTime: 0
+			};
+		},
+		render: function render() {
+			var state = this.state;
+			var props = this.props;
+			var amount = 0;
+			if (state.finalx !== props.x) {
+				state.finalx = props.x;
+				state.finaly = props.y;
+				state.startx = state.x;
+				state.starty = state.y;
+				state.startTime = Date.now();
+			} else {
+				amount = (Date.now() - state.startTime) / this.props.duration;
+			}
+			if (amount <= 1) {
+				var x = state.startx + amount * (props.x - state.startx);
+				var y = state.starty + amount * (props.y - state.starty);
+				setTimeout(function () {
+					this.setState({ x: x, y: y });
+				}.bind(this), 1);
+			} else {
+				state.finalx = state.x = x = props.x;
+				state.finaly = state.y = y = props.y;
+			}
+			return React.createElement('circle', { fill: 'none', stroke: 'green', cy: this.state.y, cx: this.state.x, r: '15', strokeWidth: '4' });
+		}
+	});
+	var posX = 0,
+	    posY = 45;
+	var iterA = 0,
+	    iterB = 1,
+	    iterC = 6;
+	massA = [1, 4, 5, 6, 5, 4, 2];
+	massC = [0, 0, 0, 0, 0, 0, 0];
+	massB = [0, 0, 0, 0, 0, 0, 0];
+	var massState = [0, 0, 0, 0, 0, 0, 0];
+	var sdvigX = 300;
+	var sdvigY = 50;
+	var coef = 60;
+	var Element = React.createClass({
+		displayName: 'Element',
+
+		getInitialState: function getInitialState() {
+			return {
+				color: "black"
+			};
+		},
+		render: function render() {
+			if (this.props.needIndex) {
+				return React.createElement(
+					'g',
+					null,
+					React.createElement(
+						'text',
+						{ x: this.props.x * this.props.coef + this.props.sdvigX + 20, y: this.props.h + this.props.sdvigY + 30, fill: 'red', 'font-family': 'sans-serif', 'font-size': '20px' },
+						this.props.item
+					),
+					React.createElement('rect', { x: this.props.x * this.props.coef + this.props.sdvigX, y: this.props.h + this.props.sdvigY, fill: 'none', stroke: 'red', width: '50', height: '50' }),
+					React.createElement(
+						'text',
+						{ x: this.props.x * this.props.coef + this.props.sdvigX + 20, y: this.props.h + this.props.sdvigY + 70, fill: this.props.color, 'font-family': 'sans-serif', 'font-size': '20px' },
+						this.props.x
+					)
+				);
+			} else {
+				return React.createElement(
+					'g',
+					null,
+					React.createElement(
+						'text',
+						{ x: this.props.x * this.props.coef + this.props.sdvigX + 20, y: this.props.h + this.props.sdvigY + 30, fill: 'red', 'font-family': 'sans-serif', 'font-size': '20px' },
+						this.props.item
+					),
+					React.createElement('rect', { x: this.props.x * this.props.coef + this.props.sdvigX, y: this.props.h + this.props.sdvigY, fill: 'none', stroke: 'red', width: '50', height: '50' })
+				);
+			}
+		}
+	});
+	var Elements = React.createClass({
+		displayName: 'Elements',
+
+		render: function render() {
+			var sdvigX = 300;
+			var sdvigY = this.props.sdvigY;
+			var needIndex = this.props.needIndex;
+			var dataState = this.props.dataState;
+			var coef = 60;
+			var data = this.props.data;
+			var cnt = 0;
+			var res = data.map(function (item, key) {
+				if (dataState[cnt] == 1) var color = "red";else var color = "black";
+				++cnt;
+				return React.createElement(Element, { key: key, x: key, coef: coef, sdvigX: sdvigX, needIndex: needIndex, sdvigY: sdvigY, h: 10, item: item, color: color });
+			});
+			return React.createElement(
+				'g',
+				null,
+				res
+			);
+		}
+	});
+	var Svg = React.createClass({
+		displayName: 'Svg',
+
+		getInitialState: function getInitialState() {
+			return {
+				f: false,
+				step: 0
+			};
+		},
+		next: function next() {
+			massState = [0, 0, 0, 0, 0, 0, 0];
+			if (iterA < 7) {
+				posX = iterA;
+				this.setState({ f: !this.state.f });
+				massC[massA[iterA]]++;
+				massState[massA[iterA]] = 1;
+				++iterA;
+			}
+			if (iterA == 7) {
+				if (iterB < 7) {
+					posY = 135;
+					posX = iterB;
+					massC[iterB] += massC[iterB - 1];
+					massState[iterB] = 1;
+					massState[iterB - 1] = 1;
+					this.setState({ f: !this.state.f });
+					++iterB;
+				} else {
+					if (iterB == 7) {
+						if (iterC >= 0) {
+							posY = 225;
+							massC[massA[iterC]] -= 1;
+							massState[massA[iterC]] = 1;
+							posX = massC[massA[iterC]];
+							massB[massC[massA[iterC]]] = massA[iterC];
+							this.setState({ f: !this.state.f });
+							--iterC;
+						}
+					}
+				}
+			}
+		},
+		render: function render() {
+			var sdvigX = 300;
+			var sdvigY = 50;
+			var coef = 60;
+			var style = {
+				float: 'none',
+				margin: 'auto'
+			};
+			return React.createElement(
+				'div',
+				null,
+				React.createElement(
+					'svg',
+					{ width: 1000, height: 300 },
+					React.createElement(Elements, { sdvigY: 10, data: massA, dataState: massState }),
+					React.createElement(Elements, { sdvigY: 100, data: massC, dataState: massState, needIndex: 1 }),
+					React.createElement(Elements, { sdvigY: 190, data: massB, dataState: massState }),
+					React.createElement(Dot, { x: posX * coef + sdvigX + 25, y: posY, в: true })
+				),
+				React.createElement(
+					'div',
+					{ className: 'pre-control' },
+					React.createElement(
+						'div',
+						{ className: 'button_control', onClick: this.next, style: style },
+						'Вперед'
+					)
+				)
+			);
+		}
+	});
+	ReactDOM.render(React.createElement(Svg, null), document.getElementById('root'));
+};
+
+},{"react":158,"react-dom":29}],162:[function(require,module,exports){
+'use strict';
+
+var React = require('react');
+var ReactDOM = require('react-dom');
+module.exports = function () {
 	var dataGraph = [[0, 0, 0, 1, 0, 0, 0], [0, 0, 1, 0, 1, 0, 0], [0, 1, 0, 1, 0, 1, 0], [1, 0, 1, 0, 1, 0, 1]];
 	var used = [];
 	var pathX = [3, 2, 1, 0, 1, 2, 1, 2, 3, 4, 3, 2, 3, 4, 5, 6];
@@ -19343,201 +19771,14 @@ function searchLong() {
 		}
 	});
 	ReactDOM.render(React.createElement(Graph, null), document.getElementById('root'));
-}
-function _countSort() {
-	var massA = [1, 4, 5, 6, 5, 4, 2];
-	var massC = [0, 0, 0, 0, 0, 0, 0];
-	var massB = [0, 0, 0, 0, 0, 0, 0];
-	var Dot = React.createClass({
-		displayName: 'Dot',
+};
 
-		getInitialState: function getInitialState() {
-			return {
-				startx: 10,
-				starty: 20,
-				x: 325,
-				y: 45,
-				finalx: 0,
-				finaly: 0,
-				startTime: 0
-			};
-		},
-		render: function render() {
-			var state = this.state;
-			var props = this.props;
-			var amount = 0;
-			if (state.finalx !== props.x) {
-				state.finalx = props.x;
-				state.finaly = props.y;
-				state.startx = state.x;
-				state.starty = state.y;
-				state.startTime = Date.now();
-			} else {
-				amount = (Date.now() - state.startTime) / this.props.duration;
-			}
-			if (amount <= 1) {
-				var x = state.startx + amount * (props.x - state.startx);
-				var y = state.starty + amount * (props.y - state.starty);
-				setTimeout(function () {
-					this.setState({ x: x, y: y });
-				}.bind(this), 1);
-			} else {
-				state.finalx = state.x = x = props.x;
-				state.finaly = state.y = y = props.y;
-			}
-			return React.createElement('circle', { fill: 'none', stroke: 'green', cy: this.state.y, cx: this.state.x, r: '15', strokeWidth: '4' });
-		}
-	});
-	var posX = 0,
-	    posY = 45;
-	var iterA = 0,
-	    iterB = 1,
-	    iterC = 6;
-	massA = [1, 4, 5, 6, 5, 4, 2];
-	massC = [0, 0, 0, 0, 0, 0, 0];
-	massB = [0, 0, 0, 0, 0, 0, 0];
-	var massState = [0, 0, 0, 0, 0, 0, 0];
-	var sdvigX = 300;
-	var sdvigY = 50;
-	var coef = 60;
-	var Element = React.createClass({
-		displayName: 'Element',
+},{"react":158,"react-dom":29}],163:[function(require,module,exports){
+'use strict';
 
-		getInitialState: function getInitialState() {
-			return {
-				color: "black"
-			};
-		},
-		render: function render() {
-			if (this.props.needIndex) {
-				return React.createElement(
-					'g',
-					null,
-					React.createElement(
-						'text',
-						{ x: this.props.x * this.props.coef + this.props.sdvigX + 20, y: this.props.h + this.props.sdvigY + 30, fill: 'red', 'font-family': 'sans-serif', 'font-size': '20px' },
-						this.props.item
-					),
-					React.createElement('rect', { x: this.props.x * this.props.coef + this.props.sdvigX, y: this.props.h + this.props.sdvigY, fill: 'none', stroke: 'red', width: '50', height: '50' }),
-					React.createElement(
-						'text',
-						{ x: this.props.x * this.props.coef + this.props.sdvigX + 20, y: this.props.h + this.props.sdvigY + 70, fill: this.props.color, 'font-family': 'sans-serif', 'font-size': '20px' },
-						this.props.x
-					)
-				);
-			} else {
-				return React.createElement(
-					'g',
-					null,
-					React.createElement(
-						'text',
-						{ x: this.props.x * this.props.coef + this.props.sdvigX + 20, y: this.props.h + this.props.sdvigY + 30, fill: 'red', 'font-family': 'sans-serif', 'font-size': '20px' },
-						this.props.item
-					),
-					React.createElement('rect', { x: this.props.x * this.props.coef + this.props.sdvigX, y: this.props.h + this.props.sdvigY, fill: 'none', stroke: 'red', width: '50', height: '50' })
-				);
-			}
-		}
-	});
-	var Elements = React.createClass({
-		displayName: 'Elements',
-
-		render: function render() {
-			var sdvigX = 300;
-			var sdvigY = this.props.sdvigY;
-			var needIndex = this.props.needIndex;
-			var dataState = this.props.dataState;
-			var coef = 60;
-			var data = this.props.data;
-			var cnt = 0;
-			var res = data.map(function (item, key) {
-				if (dataState[cnt] == 1) var color = "red";else var color = "black";
-				++cnt;
-				return React.createElement(Element, { key: key, x: key, coef: coef, sdvigX: sdvigX, needIndex: needIndex, sdvigY: sdvigY, h: 10, item: item, color: color });
-			});
-			return React.createElement(
-				'g',
-				null,
-				res
-			);
-		}
-	});
-	var Svg = React.createClass({
-		displayName: 'Svg',
-
-		getInitialState: function getInitialState() {
-			return {
-				f: false,
-				step: 0
-			};
-		},
-		start: function start() {
-			massState = [0, 0, 0, 0, 0, 0, 0];
-			if (iterA < 7) {
-				posX = iterA;
-				this.setState({ f: !this.state.f });
-				massC[massA[iterA]]++;
-				massState[massA[iterA]] = 1;
-				++iterA;
-			}
-			if (iterA == 7) {
-				if (iterB < 7) {
-					posY = 135;
-					posX = iterB;
-					massC[iterB] += massC[iterB - 1];
-					massState[iterB] = 1;
-					massState[iterB - 1] = 1;
-					this.setState({ f: !this.state.f });
-					++iterB;
-				} else {
-					if (iterB == 7) {
-						if (iterC >= 0) {
-							posY = 225;
-							massC[massA[iterC]] -= 1;
-							massState[massA[iterC]] = 1;
-							posX = massC[massA[iterC]];
-							massB[massC[massA[iterC]]] = massA[iterC];
-							this.setState({ f: !this.state.f });
-							--iterC;
-						}
-					}
-				}
-			}
-		},
-		render: function render() {
-			var sdvigX = 300;
-			var sdvigY = 50;
-			var coef = 60;
-			var style = {
-				float: 'none',
-				margin: 'auto'
-			};
-			return React.createElement(
-				'div',
-				null,
-				React.createElement(
-					'svg',
-					{ width: 1000, height: 300 },
-					React.createElement(Elements, { sdvigY: 10, data: massA, dataState: massState }),
-					React.createElement(Elements, { sdvigY: 100, data: massC, dataState: massState, needIndex: 1 }),
-					React.createElement(Elements, { sdvigY: 190, data: massB, dataState: massState }),
-					React.createElement(Dot, { x: posX * coef + sdvigX + 25, y: posY, в: true })
-				),
-				React.createElement(
-					'div',
-					{ className: 'pre-control' },
-					React.createElement(
-						'div',
-						{ className: 'button_control', onClick: this.start, style: style },
-						'Старт'
-					)
-				)
-			);
-		}
-	});
-	ReactDOM.render(React.createElement(Svg, null), document.getElementById('root'));
-}
-function _game() {
+var React = require('react');
+var ReactDOM = require('react-dom');
+module.exports = function () {
 	var pole = [[1, 4, 3, 2], [7, 6, 5, 9], [8, 10, 12, 11], [13, 14, 15, '']];
 	var answer = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, '']];
 	var Elem = React.createClass({
@@ -19617,8 +19858,110 @@ function _game() {
 
 	});
 	ReactDOM.render(React.createElement(Desk, null), document.getElementById('root'));
-}
-function _matrixProduct() {
+};
+
+},{"react":158,"react-dom":29}],164:[function(require,module,exports){
+'use strict';
+
+var React = require('react');
+var ReactDOM = require('react-dom');
+var Babel = require('./babel_sort');
+var CountSort = require('./count_Sort');
+var MatrixProduct = require('./matrix_product');
+var Dfs = require('./dfs');
+var Game = require('./game');
+var _Heap = require('./binary_heap');
+
+var Controll = React.createClass({
+	displayName: 'Controll',
+
+	babelClick: function babelClick() {
+		Babel();
+	},
+	serachClick: function serachClick() {
+		Dfs();
+	},
+	countSort: function countSort() {
+		CountSort();
+	},
+	game: function game() {
+		Game();
+	},
+	matrixProduct: function matrixProduct() {
+		MatrixProduct();
+	},
+	Heap: function Heap() {
+		_Heap();
+	},
+	render: function render() {
+		return React.createElement(
+			'div',
+			null,
+			React.createElement(
+				'div',
+				{ className: 'menu', onClick: this.babelClick },
+				React.createElement(
+					'p',
+					null,
+					'Пузырек'
+				)
+			),
+			React.createElement(
+				'div',
+				{ className: 'menu', onClick: this.serachClick },
+				React.createElement(
+					'p',
+					null,
+					'Поиск в глубину'
+				)
+			),
+			React.createElement(
+				'div',
+				{ className: 'menu', onClick: this.countSort },
+				React.createElement(
+					'p',
+					null,
+					'Сортировка подсчетом'
+				)
+			),
+			React.createElement(
+				'div',
+				{ className: 'menu', onClick: this.game },
+				React.createElement(
+					'p',
+					null,
+					'Пятнашки'
+				)
+			),
+			React.createElement(
+				'div',
+				{ className: 'menu', onClick: this.matrixProduct },
+				React.createElement(
+					'p',
+					null,
+					'Матрицы'
+				)
+			),
+			React.createElement(
+				'div',
+				{ className: 'menu', onClick: this.Heap },
+				React.createElement(
+					'p',
+					null,
+					'Бинарная куча'
+				)
+			)
+		);
+	}
+});
+ReactDOM.render(React.createElement(Controll, null), document.getElementById('control'));
+
+},{"./babel_sort":159,"./binary_heap":160,"./count_Sort":161,"./dfs":162,"./game":163,"./matrix_product":165,"react":158,"react-dom":29}],165:[function(require,module,exports){
+'use strict';
+
+var React = require('react');
+var ReactDOM = require('react-dom');
+module.exports = function () {
 	var matrA = [[1, 3, 5], [2, 6, 8], [5, 7, 3]];
 	var matrB = [[4, 7, 8], [7, 3, 4], [4, 5, 2]];
 	var matrC = [['', '', ''], ['', '', ''], ['', '', '']];
@@ -19792,77 +20135,6 @@ function _matrixProduct() {
 		}
 	});
 	ReactDOM.render(React.createElement(Matrix, null), document.getElementById('root'));
-}
-var Controll = React.createClass({
-	displayName: 'Controll',
+};
 
-	babelClick: function babelClick() {
-		babel();
-	},
-	serachClick: function serachClick() {
-		searchLong();
-	},
-	countSort: function countSort() {
-		_countSort();
-	},
-	game: function game() {
-		_game();
-	},
-	matrixProduct: function matrixProduct() {
-		_matrixProduct();
-	},
-	render: function render() {
-		return React.createElement(
-			'div',
-			null,
-			React.createElement(
-				'div',
-				{ className: 'menu', onClick: this.babelClick },
-				React.createElement(
-					'p',
-					null,
-					'Пузырек'
-				)
-			),
-			React.createElement(
-				'div',
-				{ className: 'menu', onClick: this.serachClick },
-				React.createElement(
-					'p',
-					null,
-					'Поиск в глубину'
-				)
-			),
-			React.createElement(
-				'div',
-				{ className: 'menu', onClick: this.countSort },
-				React.createElement(
-					'p',
-					null,
-					'Сортировка подсчетом'
-				)
-			),
-			React.createElement(
-				'div',
-				{ className: 'menu', onClick: this.game },
-				React.createElement(
-					'p',
-					null,
-					'Пятнашки'
-				)
-			),
-			React.createElement(
-				'div',
-				{ className: 'menu', onClick: this.matrixProduct },
-				React.createElement(
-					'p',
-					null,
-					'Матрицы'
-				)
-			)
-		);
-	}
-});
-ReactDOM.render(React.createElement(Controll, null), document.getElementById('control'));
-
-},{"react":158,"react-dom":29}]},{},[159]);
+},{"react":158,"react-dom":29}]},{},[164]);
